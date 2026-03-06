@@ -8,7 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { LogoDark } from "@/components/ui/logo";
 
+import { Suspense } from "react";
+
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setupSuccess = searchParams.get("setup") === "success";

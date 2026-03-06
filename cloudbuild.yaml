@@ -1,0 +1,80 @@
+# Cloud Build configuration for TaskPro → Cloud Run
+#
+# Required secrets in Secret Manager (create once):
+#   gcloud secrets create DATABASE_URL           --replication-policy=automatic
+#   gcloud secrets create AUTH_SECRET            --replication-policy=automatic
+#   gcloud secrets create VAPID_SUBJECT          --replication-policy=automatic
+#   gcloud secrets create NEXT_PUBLIC_VAPID_PUBLIC_KEY --replication-policy=automatic
+#   gcloud secrets create VAPID_PRIVATE_KEY      --replication-policy=automatic
+#
+# Grant Cloud Build access:
+#   PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+#   gcloud projects add-iam-policy-binding $PROJECT_ID \
+#     --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+#     --role="roles/secretmanager.secretAccessor"
+#   gcloud projects add-iam-policy-binding $PROJECT_ID \
+#     --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+#     --role="roles/run.admin"
+#   gcloud projects add-iam-policy-binding $PROJECT_ID \
+#     --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+#     --role="roles/iam.serviceAccountUser"
+
+substitutions:
+  _SERVICE_NAME: taskpro
+  _REGION: us-central1
+  _IMAGE: gcr.io/$PROJECT_ID/taskpro
+
+steps:
+  # ── Step 1: Build the Docker image ────────────────────────────────────────
+  # NEXT_PUBLIC_VAPID_PUBLIC_KEY must be baked in at build time (Next.js inlines it)
+  - name: 'gcr.io/cloud-builders/docker'
+    secretEnv: ['NEXT_PUBLIC_VAPID_PUBLIC_KEY']
+    args:
+      - build
+      - '--build-arg'
+      - 'NEXT_PUBLIC_VAPID_PUBLIC_KEY=$$NEXT_PUBLIC_VAPID_PUBLIC_KEY'
+      - '-t'
+      - '$_IMAGE:$COMMIT_SHA'
+      - '-t'
+      - '$_IMAGE:latest'
+      - '--cache-from'
+      - '$_IMAGE:latest'
+      - '.'
+
+  # ── Step 2: Push image to Container Registry ──────────────────────────────
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', '$_IMAGE']
+
+  # ── Step 3: Deploy to Cloud Run ───────────────────────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - '$_SERVICE_NAME'
+      - '--image=$_IMAGE:$COMMIT_SHA'
+      - '--region=$_REGION'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+      - '--min-instances=0'
+      - '--max-instances=10'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--concurrency=80'
+      - '--timeout=60'
+      # Non-sensitive config
+      - '--set-env-vars=NODE_ENV=production,AUTH_TRUST_HOST=1,NEXT_TELEMETRY_DISABLED=1'
+      # Secrets from Secret Manager (format: ENV_VAR=SECRET_NAME:version)
+      - >-
+        --set-secrets=DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,VAPID_SUBJECT=VAPID_SUBJECT:latest,NEXT_PUBLIC_VAPID_PUBLIC_KEY=NEXT_PUBLIC_VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest
+
+# Expose the final image in the build record
+images:
+  - '$_IMAGE:$COMMIT_SHA'
+  - '$_IMAGE:latest'
+
+# Use a high-memory machine — Next.js builds are RAM-intensive
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY

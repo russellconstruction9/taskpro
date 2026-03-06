@@ -6,4 +6,7 @@ README.md
 .next
 .git
 .env
-.env*.local
+.env.*
+*.md
+scripts/
+drizzle.config.ts

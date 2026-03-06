@@ -1,27 +1,34 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
+import { sql } from "drizzle-orm";
 import * as schema from "./schema";
 
-const sql = neon(process.env.DATABASE_URL!);
+const neonHttp = neon(process.env.DATABASE_URL!);
 
-export const db = drizzle(sql, { schema });
+export const db = drizzle(neonHttp, { schema });
+
+// The transaction object type exposed from Drizzle's neon-http adapter.
+export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
  * Execute a callback with RLS context set for the current request.
- * Sets session variables so Postgres RLS policies can enforce tenant isolation.
+ * All queries run inside a single transaction so the set_config values
+ * are visible to every query — each neon-http sql() call is a separate
+ * HTTP request (separate connection), so setting session vars outside a
+ * transaction would be lost before the callback runs.
  */
 export async function withRLS<T>(
   businessId: number,
   profileId: number,
-  callback: () => Promise<T>
+  callback: (tx: DbTransaction) => Promise<T>
 ): Promise<T> {
-  // Set session-level variables for RLS policies
-  await sql(`SELECT set_config('app.current_business_id', $1::text, true)`, [
-    businessId.toString(),
-  ]);
-  await sql(`SELECT set_config('app.current_profile_id', $1::text, true)`, [
-    profileId.toString(),
-  ]);
-
-  return callback();
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`SELECT set_config('app.current_business_id', ${businessId.toString()}, true)`
+    );
+    await tx.execute(
+      sql`SELECT set_config('app.current_profile_id', ${profileId.toString()}, true)`
+    );
+    return callback(tx);
+  });
 }

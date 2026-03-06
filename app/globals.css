@@ -1,15 +1,27 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-inter);
+  --font-sans:    var(--font-inter);
+  --font-display: var(--font-barlow);
+  --font-mono:    var(--font-jetbrains-mono);
 }
 
 /* Base styles */
 body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  background-color: #f4f4f5;
 }
 
 /* Tabular numbers for data tables */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* Login background glow — amber radial behind logo */
+.login-glow {
+  background: radial-gradient(
+    ellipse 400px 200px at center,
+    rgba(217, 119, 6, 0.12) 0%,
+    transparent 70%
+  );
 }

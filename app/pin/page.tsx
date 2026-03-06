@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
+import { LogoDark } from "@/components/ui/logo";
 
 export default function PinLoginPage() {
   const router = useRouter();
@@ -58,22 +59,18 @@ export default function PinLoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-zinc-50 p-4">
+    <div className="flex min-h-dvh items-center justify-center bg-zinc-900 p-4">
       <div className="w-full max-w-sm">
         {/* Logo / Brand */}
-        <div className="mb-8 flex flex-col items-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-zinc-900"><span className="text-zinc-400">Pro</span> Task</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+        <div className="login-glow mb-8 flex flex-col items-center">
+          <LogoDark size="lg" />
+          <h1 className="mt-4 text-2xl font-bold font-display tracking-tight text-white">Worker Sign In</h1>
+          <p className="mt-1 text-sm text-zinc-400">
             Worker sign in with your 6-digit PIN
           </p>
         </div>
 
-        <Card>
+        <Card className="shadow-2xl">
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <Input
@@ -101,7 +98,7 @@ export default function PinLoginPage() {
                       value={digit}
                       onChange={(e) => handlePinChange(index, e.target.value)}
                       onKeyDown={(e) => handlePinKeyDown(index, e)}
-                      className="h-12 w-12 rounded-lg border border-zinc-300 bg-white text-center text-lg font-semibold text-zinc-900 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                      className="h-12 w-12 rounded-lg border-2 border-zinc-300 bg-white text-center text-lg font-semibold font-mono text-zinc-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                       aria-label={`PIN digit ${index + 1}`}
                     />
                   ))}
@@ -128,11 +125,11 @@ export default function PinLoginPage() {
         </Card>
 
         <div className="mt-6 text-center">
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-zinc-400">
             Admin?{" "}
             <a
               href="/login"
-              className="font-medium text-orange-500 hover:text-orange-600"
+              className="font-medium text-amber-500 hover:text-amber-400"
             >
               Sign in with email
             </a>

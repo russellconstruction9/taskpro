@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { LogoDark } from "@/components/ui/logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,22 +42,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-zinc-50 p-4">
+    <div className="flex min-h-dvh items-center justify-center bg-zinc-900 p-4">
       <div className="w-full max-w-sm">
         {/* Logo / Brand */}
-        <div className="mb-8 flex flex-col items-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-zinc-900"><span className="text-zinc-400">Pro</span> Task</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+        <div className="login-glow mb-8 flex flex-col items-center">
+          <LogoDark size="lg" />
+          <h1 className="mt-4 text-2xl font-bold font-display tracking-tight text-white">Welcome back</h1>
+          <p className="mt-1 text-sm text-zinc-400">
             Admin sign in to manage your business
           </p>
         </div>
 
-        <Card>
+        <Card className="shadow-2xl">
           <CardContent>
             {setupSuccess && (
               <div className="mb-4 rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-700">
@@ -103,7 +100,7 @@ export default function LoginPage() {
         </Card>
 
         <div className="mt-6 space-y-3 text-center">
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-zinc-400">
             Don&apos;t have an account?{" "}
             <a
               href="/setup"
@@ -112,11 +109,11 @@ export default function LoginPage() {
               Sign up
             </a>
           </p>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-zinc-400">
             Worker?{" "}
             <a
               href="/pin"
-              className="font-medium text-orange-500 hover:text-orange-600"
+              className="font-medium text-amber-500 hover:text-amber-400"
             >
               Sign in with PIN
             </a>

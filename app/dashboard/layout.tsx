@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import { LogoDark } from "@/components/ui/logo";
 import type { ReactNode } from "react";
 
 const navItems = [
@@ -64,17 +65,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-dvh bg-zinc-50">
+    <div className="flex min-h-dvh bg-zinc-100">
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-zinc-200 bg-white">
+      <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-zinc-800 bg-zinc-900">
         {/* Brand */}
-        <div className="flex h-16 items-center gap-2 border-b border-zinc-200 px-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
-            </svg>
-          </div>
-          <span className="text-lg font-bold text-zinc-900"><span className="text-zinc-400">Pro</span> Task</span>
+        <div className="flex h-16 items-center gap-2 border-b border-zinc-800 px-5">
+          <LogoDark size="sm" />
         </div>
 
         {/* Navigation */}
@@ -92,8 +88,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-orange-50 text-orange-700"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                    ? "bg-stone-800 text-amber-100 border-l-2 border-amber-500"
+                    : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 border-l-2 border-transparent"
                 )}
               >
                 {item.icon}
@@ -104,10 +100,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </nav>
 
         {/* Sign Out */}
-        <div className="border-t border-zinc-200 p-3">
+        <div className="border-t border-zinc-800 p-3">
           <button
             onClick={handleSignOut}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />

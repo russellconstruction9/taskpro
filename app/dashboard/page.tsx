@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/badge";
 import { calculateLaborCost, formatCurrency } from "@/lib/utils/cost";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 function StatCard({
@@ -13,17 +14,20 @@ function StatCard({
   value,
   subtitle,
   href,
+  accentColor,
 }: {
   title: string;
   value: string | number;
   subtitle?: string;
   href?: string;
+  accentColor?: string;
 }) {
+  const isCurrency = typeof value === "string" && value.startsWith("$");
   const content = (
-    <Card className={href ? "hover:border-orange-200 transition-colors cursor-pointer" : ""}>
+    <Card className={cn("border-l-4", accentColor, href ? "hover:border-orange-200 transition-colors cursor-pointer" : "")}>
       <CardContent>
         <p className="text-sm font-medium text-zinc-500">{title}</p>
-        <p className="mt-1 text-3xl font-bold tabular-nums text-zinc-900">
+        <p className={cn("mt-1 text-3xl font-bold font-display tabular-nums text-zinc-900", isCurrency && "font-mono")}>
           {value}
         </p>
         {subtitle && (
@@ -91,7 +95,8 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-zinc-900">Dashboard</h1>
+      <h1 className="text-2xl font-bold font-display tracking-tight text-zinc-900">Dashboard</h1>
+      <p className="mt-1 mb-6 text-sm text-zinc-500">Overview of active operations</p>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -100,24 +105,28 @@ export default function DashboardPage() {
           value={activeJobs.length}
           subtitle={`${jobs?.length || 0} total jobs`}
           href="/dashboard/jobs"
+          accentColor="border-l-amber-400"
         />
         <StatCard
           title="Pending Tasks"
           value={pendingTasks.length}
           subtitle={`${inProgressTasks.length} in progress`}
           href="/dashboard/tasks"
+          accentColor="border-l-blue-400"
         />
         <StatCard
           title="Workers"
           value={activeWorkers.length}
           subtitle={`${clockedIn.length} clocked in now`}
           href="/dashboard/workers"
+          accentColor="border-l-emerald-400"
         />
         <StatCard
           title="Live Labor Cost"
           value={formatCurrency(totalLiveCost)}
           subtitle={`${clockedIn.length} active timers`}
           href="/dashboard/time"
+          accentColor="border-l-red-400"
         />
       </div>
 
@@ -127,12 +136,12 @@ export default function DashboardPage() {
         <Card>
           <CardContent>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-zinc-900">
+              <h2 className="text-base font-semibold font-display text-zinc-900">
                 Workers Clocked In
               </h2>
               <Link
                 href="/dashboard/time"
-                className="text-sm font-medium text-orange-500 hover:text-orange-600"
+                className="text-sm font-medium text-amber-600 hover:text-amber-700"
               >
                 View all
               </Link>
@@ -153,15 +162,18 @@ export default function DashboardPage() {
                       key={entry.id}
                       className="flex items-center justify-between rounded-lg bg-zinc-50 px-4 py-3"
                     >
-                      <div>
-                        <p className="text-sm font-medium text-zinc-900">
-                          {entry.workerName}
-                        </p>
-                        <p className="text-xs text-zinc-500">
-                          {elapsed} elapsed
-                        </p>
+                      <div className="flex items-start gap-2">
+                        <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse mr-2 flex-shrink-0 mt-1.5" />
+                        <div>
+                          <p className="text-sm font-medium text-zinc-900">
+                            {entry.workerName}
+                          </p>
+                          <p className="text-xs font-mono text-zinc-500">
+                            {elapsed} elapsed
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm font-semibold tabular-nums text-zinc-900">
+                      <p className="text-sm font-semibold font-mono tabular-nums text-zinc-900">
                         {formatCurrency(cost)}
                       </p>
                     </div>
@@ -176,12 +188,12 @@ export default function DashboardPage() {
         <Card>
           <CardContent>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-zinc-900">
+              <h2 className="text-base font-semibold font-display text-zinc-900">
                 Recent Tasks
               </h2>
               <Link
                 href="/dashboard/tasks"
-                className="text-sm font-medium text-orange-500 hover:text-orange-600"
+                className="text-sm font-medium text-amber-600 hover:text-amber-700"
               >
                 View all
               </Link>

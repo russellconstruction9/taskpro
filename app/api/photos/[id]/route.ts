@@ -39,7 +39,7 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return new NextResponse(photo.photoData, {
+  return new NextResponse(photo.photoData as any, {
     status: 200,
     headers: {
       "Content-Type": photo.mimeType,

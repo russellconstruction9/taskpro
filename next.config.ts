@@ -1,7 +1,9 @@
 import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  output: "standalone",
+};
 
 export default async (phase: string) => {
   if (phase === PHASE_DEVELOPMENT_SERVER) {

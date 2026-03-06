@@ -2,13 +2,15 @@
 
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const setupSuccess = searchParams.get("setup") === "success";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -56,6 +58,11 @@ export default function LoginPage() {
 
         <Card>
           <CardContent>
+            {setupSuccess && (
+              <div className="mb-4 rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-700">
+                Account created successfully! Sign in to continue.
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input
                 label="Email"
@@ -95,7 +102,16 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 space-y-3 text-center">
+          <p className="text-sm text-zinc-500">
+            Don&apos;t have an account?{" "}
+            <a
+              href="/setup"
+              className="font-medium text-orange-500 hover:text-orange-600"
+            >
+              Sign up
+            </a>
+          </p>
           <p className="text-sm text-zinc-500">
             Worker?{" "}
             <a

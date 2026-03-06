@@ -33,7 +33,7 @@ async function migrate() {
     const stmt = statements[i];
     const preview = stmt.substring(0, 80).replace(/\n/g, " ");
     try {
-      await sql(stmt);
+      await (sql as any)(stmt);
       console.log(`  [${i + 1}/${statements.length}] ✓ ${preview}...`);
     } catch (error: unknown) {
       const message =

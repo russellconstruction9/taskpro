@@ -9,7 +9,7 @@ import {
   index,
   customType,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
 
 // Custom bytea type for photo storage
 const bytea = customType<{ data: Buffer; dpiverType: string }>({
@@ -184,9 +184,7 @@ export const timeEntries = pgTable(
     index("time_entries_task_id_idx").on(table.taskId),
     // Unique partial index: only one open clock-in per worker
     uniqueIndex("time_entries_one_active_per_worker").on(table.profileId).where(
-      // SQL: WHERE clock_out IS NULL
-      // This is enforced via raw SQL migration, not Drizzle
-      // Placeholder — actual enforcement is in the migration SQL
+      sql`${table.clockOut} IS NULL`
     ),
   ]
 );

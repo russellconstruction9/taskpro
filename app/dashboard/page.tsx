@@ -20,7 +20,7 @@ function StatCard({
   href?: string;
 }) {
   const content = (
-    <Card className={href ? "hover:border-blue-200 transition-colors cursor-pointer" : ""}>
+    <Card className={href ? "hover:border-orange-200 transition-colors cursor-pointer" : ""}>
       <CardContent>
         <p className="text-sm font-medium text-zinc-500">{title}</p>
         <p className="mt-1 text-3xl font-bold tabular-nums text-zinc-900">
@@ -132,7 +132,7 @@ export default function DashboardPage() {
               </h2>
               <Link
                 href="/dashboard/time"
-                className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                className="text-sm font-medium text-orange-500 hover:text-orange-600"
               >
                 View all
               </Link>
@@ -181,7 +181,7 @@ export default function DashboardPage() {
               </h2>
               <Link
                 href="/dashboard/tasks"
-                className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                className="text-sm font-medium text-orange-500 hover:text-orange-600"
               >
                 View all
               </Link>

@@ -76,7 +76,7 @@ export default function WorkersPage() {
                   <tr key={worker.id} className="hover:bg-zinc-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-medium text-sm">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-700 font-medium text-sm">
                           {worker.fullName
                             .split(" ")
                             .map((n) => n[0])

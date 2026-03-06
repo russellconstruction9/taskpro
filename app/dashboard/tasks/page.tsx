@@ -331,7 +331,7 @@ function TaskFormDialog({
             type="checkbox"
             checked={requiresPhoto}
             onChange={(e) => setRequiresPhoto(e.target.checked)}
-            className="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+            className="h-4 w-4 rounded border-zinc-300 text-orange-500 focus:ring-orange-500"
           />
           <span className="text-sm text-zinc-700">
             Require photo before completion

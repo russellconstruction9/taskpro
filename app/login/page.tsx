@@ -42,11 +42,13 @@ export default function LoginPage() {
     <div className="flex min-h-dvh items-center justify-center bg-zinc-50 p-4">
       <div className="w-full max-w-sm">
         {/* Logo / Brand */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-xl">
-            T
+        <div className="mb-8 flex flex-col items-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
+            </svg>
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900">TaskPro</h1>
+          <h1 className="text-2xl font-bold text-zinc-900"><span className="text-zinc-400">Pro</span> Task</h1>
           <p className="mt-1 text-sm text-zinc-500">
             Admin sign in to manage your business
           </p>
@@ -98,7 +100,7 @@ export default function LoginPage() {
             Worker?{" "}
             <a
               href="/pin"
-              className="font-medium text-blue-600 hover:text-blue-700"
+              className="font-medium text-orange-500 hover:text-orange-600"
             >
               Sign in with PIN
             </a>

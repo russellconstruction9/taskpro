@@ -69,7 +69,7 @@ export default function TimeTrackingPage() {
           onClick={() => setShowActive(true)}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             showActive
-              ? "bg-blue-600 text-white"
+              ? "bg-orange-500 text-white"
               : "bg-white text-zinc-600 border border-zinc-300 hover:bg-zinc-50"
           }`}
         >
@@ -79,7 +79,7 @@ export default function TimeTrackingPage() {
           onClick={() => setShowActive(false)}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             !showActive
-              ? "bg-blue-600 text-white"
+              ? "bg-orange-500 text-white"
               : "bg-white text-zinc-600 border border-zinc-300 hover:bg-zinc-50"
           }`}
         >

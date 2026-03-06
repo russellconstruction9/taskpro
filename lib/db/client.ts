@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "./schema";
 
 // Fallback for Next.js build step when DATABASE_URL may not be present
-const sql = neon(process.env.DATABASE_URL || "postgres://dummy:dummy@dummy/dummy");
+const sql = neon(process.env.DATABASE_URL || "postgresql://dummy:dummy@dummy/dummy");
 
 export const db = drizzle(sql, { schema });
 

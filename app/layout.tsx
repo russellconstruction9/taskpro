@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Barlow, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -22,9 +22,29 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#18181b",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export const metadata: Metadata = {
   title: "TaskPro — Field Service Management",
   description: "Manage jobs, tasks, workers, and time tracking for your field service business.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "TaskPro",
+  },
+  icons: {
+    apple: "/icons/icon-180.png",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "msapplication-TileColor": "#18181b",
+  },
 };
 
 export default function RootLayout({
@@ -34,7 +54,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${barlow.variable} ${jetbrainsMono.variable} font-sans antialiased bg-zinc-100 text-zinc-900`}>
+      <body
+        className={`${inter.variable} ${barlow.variable} ${jetbrainsMono.variable} font-sans antialiased bg-zinc-100 text-zinc-900`}
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

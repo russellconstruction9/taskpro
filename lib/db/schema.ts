@@ -72,6 +72,7 @@ export const profilesRelations = relations(profiles, ({ one, many }) => ({
   assignedTasks: many(tasks),
   timeEntries: many(timeEntries),
   uploadedPhotos: many(taskPhotos),
+  pushSubscriptions: many(pushSubscriptions),
 }));
 
 // ─── JOBS ────────────────────────────────────────────────────
@@ -251,6 +252,36 @@ export const taskPhotosRelations = relations(taskPhotos, ({ one }) => ({
   }),
 }));
 
+// ─── PUSH SUBSCRIPTIONS ──────────────────────────────────────
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: bigint("id", { mode: "number" })
+      .primaryKey()
+      .generatedAlwaysAsIdentity(),
+    profileId: bigint("profile_id", { mode: "number" })
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("push_subscriptions_profile_id_idx").on(table.profileId),
+    uniqueIndex("push_subscriptions_endpoint_idx").on(table.endpoint),
+  ]
+);
+
+export const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one }) => ({
+  profile: one(profiles, {
+    fields: [pushSubscriptions.profileId],
+    references: [profiles.id],
+  }),
+}));
+
 // ─── TYPE EXPORTS ────────────────────────────────────────────
 export type Business = typeof businesses.$inferSelect;
 export type NewBusiness = typeof businesses.$inferInsert;
@@ -264,3 +295,5 @@ export type TimeEntry = typeof timeEntries.$inferSelect;
 export type NewTimeEntry = typeof timeEntries.$inferInsert;
 export type TaskPhoto = typeof taskPhotos.$inferSelect;
 export type NewTaskPhoto = typeof taskPhotos.$inferInsert;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type NewPushSubscription = typeof pushSubscriptions.$inferInsert;

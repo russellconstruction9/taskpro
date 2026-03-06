@@ -5,6 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { LogoDark } from "@/components/ui/logo";
+import { PushSubscription } from "@/components/push-subscription";
+import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
+import { OfflineIndicator } from "@/components/offline-indicator";
 import type { ReactNode } from "react";
 
 const navItems = [
@@ -101,6 +104,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         {/* Sign Out */}
         <div className="border-t border-zinc-800 p-3">
+          <PushSubscription />
           <button
             onClick={handleSignOut}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
@@ -117,6 +121,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <main className="ml-60 flex-1 p-8">
         {children}
       </main>
+      <OfflineIndicator />
+      <PwaInstallPrompt />
     </div>
   );
 }

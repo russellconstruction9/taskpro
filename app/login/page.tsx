@@ -1,0 +1,110 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Invalid email or password");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-zinc-50 p-4">
+      <div className="w-full max-w-sm">
+        {/* Logo / Brand */}
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-xl">
+            T
+          </div>
+          <h1 className="text-2xl font-bold text-zinc-900">TaskPro</h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            Admin sign in to manage your business
+          </p>
+        </div>
+
+        <Card>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                label="Email"
+                type="email"
+                placeholder="admin@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
+              />
+
+              <Input
+                label="Password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+
+              {error && (
+                <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                loading={loading}
+                className="w-full"
+                size="lg"
+              >
+                Sign In
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-zinc-500">
+            Worker?{" "}
+            <a
+              href="/pin"
+              className="font-medium text-blue-600 hover:text-blue-700"
+            >
+              Sign in with PIN
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

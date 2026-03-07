@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
-import { LogoDark } from "@/components/ui/logo";
+import { Logo, LogoDark } from "@/components/ui/logo";
 import { PushSubscription } from "@/components/push-subscription";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
 import { OfflineIndicator } from "@/components/offline-indicator";
@@ -72,16 +73,35 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   async function handleSignOut() {
     await signOut({ redirect: false });
     router.push("/login");
   }
 
+  function closeSidebar() {
+    setSidebarOpen(false);
+  }
+
   return (
     <div className="flex min-h-dvh bg-zinc-100">
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-zinc-800 bg-zinc-900">
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-zinc-800 bg-zinc-900 transition-transform duration-300 ease-in-out",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
+      >
         {/* Brand */}
         <div className="flex h-16 items-center gap-2 border-b border-zinc-800 px-5">
           <LogoDark size="sm" />
@@ -91,6 +111,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         {session?.user?.businessId && (
           <Link
             href="/dashboard/settings"
+            onClick={closeSidebar}
             className="mx-3 mt-3 flex items-center justify-between rounded-lg bg-zinc-800/50 px-3 py-2 text-xs transition-colors hover:bg-zinc-800"
           >
             <span className="text-zinc-500">Business ID</span>
@@ -101,7 +122,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         )}
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 p-3">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {navItems.map((item) => {
             const isActive =
               item.href === "/dashboard"
@@ -112,8 +133,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={closeSidebar}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
                     ? "bg-stone-800 text-amber-100 border-l-2 border-amber-500"
                     : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 border-l-2 border-transparent"
@@ -141,10 +163,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="ml-60 flex-1 p-8">
-        {children}
-      </main>
+      {/* Content wrapper */}
+      <div className="flex min-w-0 flex-1 flex-col md:ml-64">
+        {/* Mobile header */}
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-zinc-200 bg-zinc-100 px-4 md:hidden">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-200 transition-colors"
+            aria-label="Open navigation menu"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+          <Logo size="sm" />
+        </header>
+
+        {/* Main content */}
+        <main className="flex-1 p-4 md:p-8">
+          {children}
+        </main>
+      </div>
+
       <OfflineIndicator />
       <PwaInstallPrompt />
     </div>

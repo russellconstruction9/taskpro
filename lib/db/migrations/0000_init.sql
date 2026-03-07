@@ -81,6 +81,15 @@ CREATE TABLE IF NOT EXISTS task_photos (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  profile_id bigint NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  endpoint text NOT NULL,
+  p256dh text NOT NULL,
+  auth text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
 
 -- ═══════════════════════════════════════════════════════════════
 -- 2. INDEXES
@@ -115,6 +124,10 @@ CREATE INDEX IF NOT EXISTS task_photos_business_id_idx ON task_photos (business_
 CREATE INDEX IF NOT EXISTS task_photos_task_id_idx ON task_photos (task_id);
 CREATE INDEX IF NOT EXISTS task_photos_uploaded_by_idx ON task_photos (uploaded_by);
 
+-- Push Subscriptions
+CREATE INDEX IF NOT EXISTS push_subscriptions_profile_id_idx ON push_subscriptions (profile_id);
+CREATE UNIQUE INDEX IF NOT EXISTS push_subscriptions_endpoint_idx ON push_subscriptions (endpoint);
+
 
 -- ═══════════════════════════════════════════════════════════════
 -- 3. ROW LEVEL SECURITY
@@ -127,6 +140,7 @@ ALTER TABLE jobs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE time_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE task_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Helper: Get current business_id from session (wrapped in SELECT for performance)
 -- Policies use (SELECT current_setting(...)) to avoid per-row function calls
@@ -166,6 +180,15 @@ DROP POLICY IF EXISTS task_photos_isolation ON task_photos;
 CREATE POLICY task_photos_isolation ON task_photos
   FOR ALL
   USING (business_id = (SELECT current_setting('app.current_business_id', true))::bigint);
+
+-- Push Subscriptions: scoped via profile -> business_id
+DROP POLICY IF EXISTS push_subscriptions_isolation ON push_subscriptions;
+CREATE POLICY push_subscriptions_isolation ON push_subscriptions
+  FOR ALL
+  USING (profile_id IN (
+    SELECT id FROM profiles
+    WHERE business_id = (SELECT current_setting('app.current_business_id', true))::bigint
+  ));
 
 
 -- ═══════════════════════════════════════════════════════════════

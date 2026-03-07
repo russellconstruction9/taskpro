@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db/client";
+import { db, withRLS } from "@/lib/db/client";
 import { taskPhotos } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { getRequestSession } from "@/lib/auth/get-session";
@@ -24,16 +24,18 @@ export async function GET(
     return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   }
 
-  const [photo] = await db
-    .select()
-    .from(taskPhotos)
-    .where(
-      and(
-        eq(taskPhotos.id, photoId),
-        eq(taskPhotos.businessId, session.businessId)
+  const [photo] = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .select()
+      .from(taskPhotos)
+      .where(
+        and(
+          eq(taskPhotos.id, photoId),
+          eq(taskPhotos.businessId, session.businessId)
+        )
       )
-    )
-    .limit(1);
+      .limit(1)
+  );
 
   if (!photo) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

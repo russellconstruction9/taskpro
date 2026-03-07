@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db/client";
+import { db, withRLS } from "@/lib/db/client";
 import { tasks, taskPhotos, profiles } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { createTaskSchema } from "@/lib/validators/schemas";
@@ -32,25 +32,27 @@ export async function GET(request: NextRequest) {
     conditions.push(eq(tasks.assignedTo, parseInt(assignedTo, 10)));
   }
 
-  const result = await db
-    .select({
-      id: tasks.id,
-      businessId: tasks.businessId,
-      jobId: tasks.jobId,
-      assignedTo: tasks.assignedTo,
-      title: tasks.title,
-      description: tasks.description,
-      status: tasks.status,
-      requiresPhoto: tasks.requiresPhoto,
-      createdAt: tasks.createdAt,
-      completedAt: tasks.completedAt,
-      assigneeName: profiles.fullName,
-      photoCount: sql<number>`(SELECT count(*) FROM task_photos WHERE task_photos.task_id = ${tasks.id})`,
-    })
-    .from(tasks)
-    .leftJoin(profiles, eq(tasks.assignedTo, profiles.id))
-    .where(and(...conditions))
-    .orderBy(tasks.createdAt);
+  const result = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .select({
+        id: tasks.id,
+        businessId: tasks.businessId,
+        jobId: tasks.jobId,
+        assignedTo: tasks.assignedTo,
+        title: tasks.title,
+        description: tasks.description,
+        status: tasks.status,
+        requiresPhoto: tasks.requiresPhoto,
+        createdAt: tasks.createdAt,
+        completedAt: tasks.completedAt,
+        assigneeName: profiles.fullName,
+        photoCount: sql<number>`(SELECT count(*) FROM task_photos WHERE task_photos.task_id = ${tasks.id})`,
+      })
+      .from(tasks)
+      .leftJoin(profiles, eq(tasks.assignedTo, profiles.id))
+      .where(and(...conditions))
+      .orderBy(tasks.createdAt)
+  );
 
   return NextResponse.json(result);
 }
@@ -78,17 +80,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const [task] = await db
-    .insert(tasks)
-    .values({
-      businessId: session.businessId,
-      jobId: parsed.data.jobId,
-      title: parsed.data.title,
-      description: parsed.data.description,
-      assignedTo: parsed.data.assignedTo,
-      requiresPhoto: parsed.data.requiresPhoto,
-    })
-    .returning();
+  const [task] = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .insert(tasks)
+      .values({
+        businessId: session.businessId,
+        jobId: parsed.data.jobId,
+        title: parsed.data.title,
+        description: parsed.data.description,
+        assignedTo: parsed.data.assignedTo,
+        requiresPhoto: parsed.data.requiresPhoto,
+      })
+      .returning()
+  );
 
   return NextResponse.json(task, { status: 201 });
 }

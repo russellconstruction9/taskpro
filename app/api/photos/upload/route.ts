@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db/client";
+import { db, withRLS } from "@/lib/db/client";
 import { taskPhotos } from "@/lib/db/schema";
 import { getRequestSession } from "@/lib/auth/get-session";
 import { uploadPhotoSchema } from "@/lib/validators/schemas";
@@ -58,25 +58,27 @@ export async function POST(request: NextRequest) {
   const arrayBuffer = await photo.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
-  const [photoRecord] = await db
-    .insert(taskPhotos)
-    .values({
-      businessId: session.businessId,
-      taskId: parsed.data.taskId,
-      uploadedBy: session.profileId,
-      photoData: buffer,
-      mimeType: photo.type,
-      fileSizeBytes: photo.size,
-      caption: parsed.data.caption,
-    })
-    .returning({
-      id: taskPhotos.id,
-      taskId: taskPhotos.taskId,
-      mimeType: taskPhotos.mimeType,
-      fileSizeBytes: taskPhotos.fileSizeBytes,
-      caption: taskPhotos.caption,
-      createdAt: taskPhotos.createdAt,
-    });
+  const [photoRecord] = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .insert(taskPhotos)
+      .values({
+        businessId: session.businessId,
+        taskId: parsed.data.taskId,
+        uploadedBy: session.profileId,
+        photoData: buffer,
+        mimeType: photo.type,
+        fileSizeBytes: photo.size,
+        caption: parsed.data.caption,
+      })
+      .returning({
+        id: taskPhotos.id,
+        taskId: taskPhotos.taskId,
+        mimeType: taskPhotos.mimeType,
+        fileSizeBytes: taskPhotos.fileSizeBytes,
+        caption: taskPhotos.caption,
+        createdAt: taskPhotos.createdAt,
+      })
+  );
 
   return NextResponse.json(photoRecord, { status: 201 });
 }

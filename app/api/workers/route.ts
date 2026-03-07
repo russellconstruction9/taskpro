@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db/client";
+import { db, withRLS } from "@/lib/db/client";
 import { profiles } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { createProfileSchema } from "@/lib/validators/schemas";
@@ -19,24 +19,26 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const workers = await db
-    .select({
-      id: profiles.id,
-      fullName: profiles.fullName,
-      role: profiles.role,
-      email: profiles.email,
-      hourlyRate: profiles.hourlyRate,
-      isActive: profiles.isActive,
-      createdAt: profiles.createdAt,
-    })
-    .from(profiles)
-    .where(
-      and(
-        eq(profiles.businessId, session.businessId),
-        eq(profiles.role, "worker")
+  const workers = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .select({
+        id: profiles.id,
+        fullName: profiles.fullName,
+        role: profiles.role,
+        email: profiles.email,
+        hourlyRate: profiles.hourlyRate,
+        isActive: profiles.isActive,
+        createdAt: profiles.createdAt,
+      })
+      .from(profiles)
+      .where(
+        and(
+          eq(profiles.businessId, session.businessId),
+          eq(profiles.role, "worker")
+        )
       )
-    )
-    .orderBy(profiles.fullName);
+      .orderBy(profiles.fullName)
+  );
 
   return NextResponse.json(workers);
 }
@@ -70,26 +72,28 @@ export async function POST(request: NextRequest) {
   const passwordHash = password ? await hashPassword(password) : null;
   const pinHash = pin ? await hashPin(pin) : null;
 
-  const [profile] = await db
-    .insert(profiles)
-    .values({
-      businessId: session.businessId,
-      fullName,
-      role,
-      email,
-      passwordHash,
-      pinHash,
-      hourlyRate: hourlyRate.toFixed(2),
-    })
-    .returning({
-      id: profiles.id,
-      fullName: profiles.fullName,
-      role: profiles.role,
-      email: profiles.email,
-      hourlyRate: profiles.hourlyRate,
-      isActive: profiles.isActive,
-      createdAt: profiles.createdAt,
-    });
+  const [profile] = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .insert(profiles)
+      .values({
+        businessId: session.businessId,
+        fullName,
+        role,
+        email,
+        passwordHash,
+        pinHash,
+        hourlyRate: hourlyRate.toFixed(2),
+      })
+      .returning({
+        id: profiles.id,
+        fullName: profiles.fullName,
+        role: profiles.role,
+        email: profiles.email,
+        hourlyRate: profiles.hourlyRate,
+        isActive: profiles.isActive,
+        createdAt: profiles.createdAt,
+      })
+  );
 
   return NextResponse.json(profile, { status: 201 });
 }

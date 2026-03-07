@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db/client";
+import { db, withRLS } from "@/lib/db/client";
 import { jobs } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { createJobSchema } from "@/lib/validators/schemas";
@@ -23,11 +23,13 @@ export async function GET(request: NextRequest) {
     conditions.push(eq(jobs.status, status));
   }
 
-  const result = await db
-    .select()
-    .from(jobs)
-    .where(and(...conditions))
-    .orderBy(jobs.createdAt);
+  const result = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .select()
+      .from(jobs)
+      .where(and(...conditions))
+      .orderBy(jobs.createdAt)
+  );
 
   return NextResponse.json(result);
 }
@@ -55,13 +57,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const [job] = await db
-    .insert(jobs)
-    .values({
-      businessId: session.businessId,
-      ...parsed.data,
-    })
-    .returning();
+  const [job] = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .insert(jobs)
+      .values({
+        businessId: session.businessId,
+        ...parsed.data,
+      })
+      .returning()
+  );
 
   return NextResponse.json(job, { status: 201 });
 }

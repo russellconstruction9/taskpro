@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db/client";
+import { db, withRLS } from "@/lib/db/client";
 import { tasks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { updateTaskSchema } from "@/lib/validators/schemas";
@@ -20,11 +20,13 @@ export async function GET(
   const { id } = await params;
   const taskId = parseInt(id, 10);
 
-  const [task] = await db
-    .select()
-    .from(tasks)
-    .where(and(eq(tasks.id, taskId), eq(tasks.businessId, session.businessId)))
-    .limit(1);
+  const [task] = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, taskId), eq(tasks.businessId, session.businessId)))
+      .limit(1)
+  );
 
   if (!task) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -58,30 +60,34 @@ export async function PATCH(
   }
 
   // Workers can only update status of their own tasks
-  if (session.role === "worker") {
-    const [existing] = await db
-      .select()
-      .from(tasks)
-      .where(
-        and(
-          eq(tasks.id, taskId),
-          eq(tasks.businessId, session.businessId),
-          eq(tasks.assignedTo, session.profileId)
-        )
-      )
-      .limit(1);
-
-    if (!existing) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-  }
-
   try {
-    const [updated] = await db
-      .update(tasks)
-      .set(parsed.data)
-      .where(and(eq(tasks.id, taskId), eq(tasks.businessId, session.businessId)))
-      .returning();
+    const [updated] = await withRLS(
+      session.businessId,
+      session.profileId,
+      async (tx) => {
+        if (session.role === "worker") {
+          const [existing] = await tx
+            .select()
+            .from(tasks)
+            .where(
+              and(
+                eq(tasks.id, taskId),
+                eq(tasks.businessId, session.businessId),
+                eq(tasks.assignedTo, session.profileId)
+              )
+            )
+            .limit(1);
+
+          if (!existing) return [];
+        }
+
+        return tx
+          .update(tasks)
+          .set(parsed.data)
+          .where(and(eq(tasks.id, taskId), eq(tasks.businessId, session.businessId)))
+          .returning();
+      }
+    );
 
     if (!updated) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });

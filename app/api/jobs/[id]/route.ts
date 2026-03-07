@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db/client";
+import { db, withRLS } from "@/lib/db/client";
 import { jobs } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { updateJobSchema } from "@/lib/validators/schemas";
@@ -20,11 +20,13 @@ export async function GET(
   const { id } = await params;
   const jobId = parseInt(id, 10);
 
-  const [job] = await db
-    .select()
-    .from(jobs)
-    .where(and(eq(jobs.id, jobId), eq(jobs.businessId, session.businessId)))
-    .limit(1);
+  const [job] = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .select()
+      .from(jobs)
+      .where(and(eq(jobs.id, jobId), eq(jobs.businessId, session.businessId)))
+      .limit(1)
+  );
 
   if (!job) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -61,11 +63,13 @@ export async function PATCH(
     );
   }
 
-  const [updated] = await db
-    .update(jobs)
-    .set(parsed.data)
-    .where(and(eq(jobs.id, jobId), eq(jobs.businessId, session.businessId)))
-    .returning();
+  const [updated] = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .update(jobs)
+      .set(parsed.data)
+      .where(and(eq(jobs.id, jobId), eq(jobs.businessId, session.businessId)))
+      .returning()
+  );
 
   if (!updated) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -93,10 +97,12 @@ export async function DELETE(
   const { id } = await params;
   const jobId = parseInt(id, 10);
 
-  const [deleted] = await db
-    .delete(jobs)
-    .where(and(eq(jobs.id, jobId), eq(jobs.businessId, session.businessId)))
-    .returning();
+  const [deleted] = await withRLS(session.businessId, session.profileId, (tx) =>
+    tx
+      .delete(jobs)
+      .where(and(eq(jobs.id, jobId), eq(jobs.businessId, session.businessId)))
+      .returning()
+  );
 
   if (!deleted) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

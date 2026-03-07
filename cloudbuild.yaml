@@ -7,7 +7,7 @@
 #   gcloud secrets create NEXT_PUBLIC_VAPID_PUBLIC_KEY --replication-policy=automatic
 #   gcloud secrets create VAPID_PRIVATE_KEY      --replication-policy=automatic
 #
-# Grant Cloud Build access:
+# Grant Cloud Build SA access:
 #   PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 #   gcloud projects add-iam-policy-binding $PROJECT_ID \
 #     --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
@@ -18,6 +18,12 @@
 #   gcloud projects add-iam-policy-binding $PROJECT_ID \
 #     --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
 #     --role="roles/iam.serviceAccountUser"
+#
+# Grant Cloud Run default SA access to Secret Manager (REQUIRED — without this
+# DATABASE_URL and other --set-secrets values are never injected at runtime):
+#   gcloud projects add-iam-policy-binding $PROJECT_ID \
+#     --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+#     --role="roles/secretmanager.secretAccessor"
 
 substitutions:
   _SERVICE_NAME: taskpro
@@ -45,7 +51,16 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '$_IMAGE']
 
-  # ── Step 3: Deploy to Cloud Run ───────────────────────────────────────────
+  # ── Step 3: Run database migrations ──────────────────────────────────────
+  # Runs before traffic switches over so the schema is always up to date.
+  - name: 'node:20-alpine'
+    secretEnv: ['DATABASE_URL']
+    entrypoint: sh
+    args:
+      - -c
+      - 'npm ci && npm run migrate'
+
+  # ── Step 4: Deploy to Cloud Run ───────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -73,6 +88,14 @@ steps:
 images:
   - '$_IMAGE:$COMMIT_SHA'
   - '$_IMAGE:latest'
+
+# Bind Secret Manager secrets for steps that use secretEnv
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/NEXT_PUBLIC_VAPID_PUBLIC_KEY/versions/latest
+      env: 'NEXT_PUBLIC_VAPID_PUBLIC_KEY'
+    - versionName: projects/$PROJECT_ID/secrets/DATABASE_URL/versions/latest
+      env: 'DATABASE_URL'
 
 # Use a high-memory machine — Next.js builds are RAM-intensive
 options:

@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Prevent webpack from bundling the Neon serverless driver; it must stay as
+  // a Node.js external so its HTTP fetch logic is not transformed incorrectly.
+  serverExternalPackages: ["@neondatabase/serverless"],
 };
 
 export default async (phase: string) => {

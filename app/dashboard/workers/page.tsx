@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useRouter } from "next/navigation";
 import { api, type WorkerResponse } from "@/lib/api";
@@ -20,6 +20,14 @@ import { formatCurrency } from "@/lib/utils/cost";
 import { format } from "date-fns";
 
 export default function WorkersPage() {
+  return (
+    <Suspense fallback={null}>
+      <WorkersPageContent />
+    </Suspense>
+  );
+}
+
+function WorkersPageContent() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const router = useRouter();

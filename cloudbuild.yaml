@@ -3,6 +3,7 @@
 # Required secrets in Secret Manager (create once):
 #   gcloud secrets create DATABASE_URL           --replication-policy=automatic
 #   gcloud secrets create AUTH_SECRET            --replication-policy=automatic
+#   gcloud secrets create JWT_SECRET             --replication-policy=automatic
 #   gcloud secrets create VAPID_SUBJECT          --replication-policy=automatic
 #   gcloud secrets create NEXT_PUBLIC_VAPID_PUBLIC_KEY --replication-policy=automatic
 #   gcloud secrets create VAPID_PRIVATE_KEY      --replication-policy=automatic
@@ -78,11 +79,12 @@ steps:
       - '--cpu=1'
       - '--concurrency=80'
       - '--timeout=60'
+      - '--cpu-boost'
       # Non-sensitive config
       - '--set-env-vars=NODE_ENV=production,AUTH_TRUST_HOST=1,NEXT_TELEMETRY_DISABLED=1'
       # Secrets from Secret Manager (format: ENV_VAR=SECRET_NAME:version)
       - >-
-        --set-secrets=DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,VAPID_SUBJECT=VAPID_SUBJECT:latest,NEXT_PUBLIC_VAPID_PUBLIC_KEY=NEXT_PUBLIC_VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest
+        --set-secrets=DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,JWT_SECRET=JWT_SECRET:latest,VAPID_SUBJECT=VAPID_SUBJECT:latest,NEXT_PUBLIC_VAPID_PUBLIC_KEY=NEXT_PUBLIC_VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest
 
 # Expose the final image in the build record
 images:

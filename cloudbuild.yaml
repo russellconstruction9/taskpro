@@ -27,11 +27,24 @@
 #     --role="roles/secretmanager.secretAccessor"
 
 substitutions:
-  _SERVICE_NAME: taskpro
-  _REGION: us-central1
-  _IMAGE: gcr.io/$PROJECT_ID/taskpro
+  _SERVICE_NAME: taskap
+  _REGION: us-east5
+  _AR_HOSTNAME: us-east5-docker.pkg.dev
+  _AR_REPOSITORY: cloud-run-source-deploy
+  _IMAGE: us-east5-docker.pkg.dev/$PROJECT_ID/$_AR_REPOSITORY/taskpro/taskap
 
 steps:
+  # ── Step 0: Ensure Artifact Registry repo exists ────────────────────────
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        gcloud artifacts repositories describe $_AR_REPOSITORY \
+          --location=$_REGION --project=$PROJECT_ID 2>/dev/null || \
+        gcloud artifacts repositories create $_AR_REPOSITORY \
+          --location=$_REGION --repository-format=docker --project=$PROJECT_ID
+
   # ── Step 1: Build the Docker image ────────────────────────────────────────
   # NEXT_PUBLIC_VAPID_PUBLIC_KEY must be baked in at build time (Next.js inlines it)
   - name: 'gcr.io/cloud-builders/docker'
@@ -48,7 +61,7 @@ steps:
       - '$_IMAGE:latest'
       - '.'
 
-  # ── Step 2: Push image to Container Registry ──────────────────────────────
+  # ── Step 2: Push image to Artifact Registry ─────────────────────────────
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '--all-tags', '$_IMAGE']
 
@@ -56,10 +69,11 @@ steps:
   # Runs before traffic switches over so the schema is always up to date.
   - name: 'node:20-alpine'
     secretEnv: ['DATABASE_URL']
+    dir: '/workspace'
     entrypoint: sh
     args:
       - -c
-      - 'npm ci && npm run migrate'
+      - 'npm ci && DATABASE_URL=$$DATABASE_URL npm run migrate'
 
   # ── Step 4: Deploy to Cloud Run ───────────────────────────────────────────
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -81,7 +95,7 @@ steps:
       - '--timeout=60'
       - '--cpu-boost'
       # Non-sensitive config
-      - '--set-env-vars=NODE_ENV=production,AUTH_TRUST_HOST=1,NEXT_TELEMETRY_DISABLED=1'
+      - '--set-env-vars=NODE_ENV=production,AUTH_TRUST_HOST=1,NEXT_TELEMETRY_DISABLED=1,NEXTAUTH_URL=https://taskap-jgi2jqm4hq-ul.a.run.app'
       # Secrets from Secret Manager (format: ENV_VAR=SECRET_NAME:version)
       - >-
         --set-secrets=DATABASE_URL=DATABASE_URL:latest,AUTH_SECRET=AUTH_SECRET:latest,JWT_SECRET=JWT_SECRET:latest,VAPID_SUBJECT=VAPID_SUBJECT:latest,NEXT_PUBLIC_VAPID_PUBLIC_KEY=NEXT_PUBLIC_VAPID_PUBLIC_KEY:latest,VAPID_PRIVATE_KEY=VAPID_PRIVATE_KEY:latest
@@ -90,6 +104,8 @@ steps:
 images:
   - '$_IMAGE:$COMMIT_SHA'
   - '$_IMAGE:latest'
+
+tagsEnabled: true
 
 # Bind Secret Manager secrets for steps that use secretEnv
 availableSecrets:

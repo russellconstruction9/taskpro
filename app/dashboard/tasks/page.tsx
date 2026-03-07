@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   api,
   type TaskResponse,
@@ -34,10 +35,19 @@ const statusFilterOptions = [
 
 export default function TasksPage() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState("");
   const [jobFilter, setJobFilter] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskResponse | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setShowCreate(true);
+      router.replace("/dashboard/tasks");
+    }
+  }, [searchParams, router]);
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ["tasks", statusFilter, jobFilter],

@@ -3,8 +3,29 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { profiles } from "@/lib/db/schema";
 import { verifyPin } from "@/lib/auth/pin";
-import { createWorkerToken } from "@/lib/auth/session";
+import { createWorkerToken, verifyWorkerToken } from "@/lib/auth/session";
 import { pinLoginSchema } from "@/lib/validators/schemas";
+
+/**
+ * GET /api/auth/pin
+ * Returns the current worker session info from the worker-token cookie.
+ */
+export async function GET(request: NextRequest) {
+  const token = request.cookies.get("worker-token")?.value;
+  if (!token) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+  const session = await verifyWorkerToken(token);
+  if (!session) {
+    return NextResponse.json({ error: "Invalid session" }, { status: 401 });
+  }
+  return NextResponse.json({
+    profileId: session.profileId,
+    businessId: session.businessId,
+    fullName: session.fullName,
+    role: session.role,
+  });
+}
 
 /**
  * POST /api/auth/pin

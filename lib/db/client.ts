@@ -25,6 +25,9 @@ export async function withRLS<T>(
   callback: (tx: DbTransaction) => Promise<T>
 ): Promise<T> {
   return db.transaction(async (tx) => {
+    // Switch to the 'authenticated' role so RLS policies are enforced.
+    // The neondb_owner (table owner) bypasses RLS unless we change role.
+    await tx.execute(sql`SET LOCAL ROLE authenticated`);
     await tx.execute(
       sql`SELECT set_config('app.current_business_id', ${businessId.toString()}, true)`
     );

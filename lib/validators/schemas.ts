@@ -14,13 +14,16 @@ export const pinLoginSchema = z.object({
     .regex(/^\d{6}$/, "PIN must contain only digits"),
 });
 
+// Helper: treat empty strings as null for optional fields
+const emptyToNull = z.literal("").transform(() => null);
+
 // ─── PROFILES ────────────────────────────────────────────────
 export const createProfileSchema = z.object({
   fullName: z.string().min(1, "Name is required").max(200),
   role: z.enum(["admin", "worker"]),
-  email: z.string().email().optional().nullable(),
-  password: z.string().min(6).optional().nullable(),
-  pin: z.string().length(6).regex(/^\d{6}$/).optional().nullable(),
+  email: z.union([z.string().email(), emptyToNull]).optional().nullable(),
+  password: z.union([z.string().min(6), emptyToNull]).optional().nullable(),
+  pin: z.union([z.string().length(6).regex(/^\d{6}$/), emptyToNull]).optional().nullable(),
   hourlyRate: z.coerce.number().min(0).default(0),
 });
 
